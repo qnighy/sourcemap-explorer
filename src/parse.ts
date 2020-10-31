@@ -13,6 +13,7 @@ const initResult = (): ParseResult => ({
 export interface ParsedFile {
   content: ArrayBuffer;
   sourceMap?: SourceMapContent;
+  sourceMapRef?: string;
 }
 
 export interface SourceMapContent {
@@ -79,7 +80,16 @@ const parseFile = (name: string, content: ArrayBuffer): ParsedFile => {
       sourceMap: parseSourceMap(content),
     };
   }
-  return { content };
+  let sourceMapRef: string | undefined;
+  const contentText = new TextDecoder().decode(content);
+  const matchJS = contentText.match(/^\/\/# sourceMappingURL=(.*)$/m);
+  const matchCSS = contentText.match(/^\/\*# sourceMappingURL=(.*) \*\/$/m);
+  if (matchJS) {
+    sourceMapRef = matchJS[1];
+  } else if (matchCSS) {
+    sourceMapRef = matchCSS[1];
+  }
+  return { content, sourceMapRef };
 };
 
 const parseSourceMap = (content: ArrayBuffer): SourceMapContent => {
