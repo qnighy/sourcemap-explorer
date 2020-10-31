@@ -18,7 +18,7 @@ const App: React.FC = () => {
           <ul className="file-list">
             {
               Array.from(uploaderState.uploadedFiles.entries()).map(([name, file]) => (
-                <FileListEntry name={name} file={file} removeFile={uploaderState.removeFile} />
+                <FileListEntry key={name} name={name} file={file} removeFile={uploaderState.removeFile} />
               ))
             }
           </ul>
@@ -49,7 +49,7 @@ const FileListEntry: React.FC<FileListEntryProps> = (props) => {
   const { name, file, removeFile } = props;
   const removeThisFile = useCallback(() => removeFile(name), [name, removeFile]);
   return (
-    <li key={name} className="file-list-entry">
+    <li className="file-list-entry">
       {name}{file.state === "uploading" ? "..." : ""}
       <span className="file-list-remove" onClick={removeThisFile}>x</span>
     </li>
