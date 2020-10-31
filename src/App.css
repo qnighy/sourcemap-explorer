@@ -1,0 +1,12 @@
+.editor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.editor-generated {
+  border-right: 1px solid black;
+}
+
+.editor-source {
+  border-left: 1px solid black;
+}
