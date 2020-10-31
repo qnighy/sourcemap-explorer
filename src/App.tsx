@@ -2,9 +2,12 @@ import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FileState, useUploader } from './uploader';
 import './App.css';
+import { ParsedFile, parseFiles } from './parse';
+import { useDiffMemo } from './diff_memo';
 
 const App: React.FC = () => {
   const uploaderState = useUploader();
+  const _parseResult = useDiffMemo((prev?: Map<string, ParsedFile>) => parseFiles(uploaderState.uploadedFiles, prev), [uploaderState.uploadedFiles]);
   const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop: uploaderState.onDrop})
   return (
     <div className="App">
