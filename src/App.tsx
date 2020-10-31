@@ -59,7 +59,11 @@ const FileListEntry: React.FC<FileListEntryProps> = (props) => {
   return (
     <li className="file-list-entry">
       {name}{file.state === "uploading" ? "..." : ""}
-      <span className="file-list-remove" onClick={removeThisFile}>x</span>
+      {
+        file.state === "uploading" || file.state === "uploaded" ?
+        <span className="file-list-remove" onClick={removeThisFile}>x</span> :
+        null
+      }
     </li>
   );
 };
