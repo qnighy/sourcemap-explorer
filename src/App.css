@@ -19,6 +19,7 @@
 .file-list-entry {
   border: 1px solid #dddddd;
   margin: 3px;
+  min-height: 34px;
 }
 .file-list-entry.selected {
   background-color: #eeeeee;
@@ -53,4 +54,9 @@
 
 .file-list-remove {
   margin: 1px;
+}
+
+pre.generated-file-content {
+  white-space: pre-wrap;
+  word-break: break-all;
 }

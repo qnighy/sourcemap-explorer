@@ -13,7 +13,8 @@ const App: React.FC = () => {
   const parseResult = useDiffMemo((prev?: ParseResult) => parseFiles(uploaderState.uploadedFiles, prev), [uploaderState.uploadedFiles]);
   const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop: uploaderState.onDrop})
 
-  const [selectedGenerated, setSelectedGenerated] = useState<string | null>(null);
+  const [selectedGenerated, setSelectedGenerated] = useState<string | undefined>(undefined);
+  const selectedGeneratedFile = selectedGenerated !== undefined ? uploaderState.uploadedFiles.get(selectedGenerated) : undefined;
   return (
     <div className="App">
       <h1>SourceMap Explorer</h1>
@@ -35,6 +36,14 @@ const App: React.FC = () => {
                 <p>Drag 'n' drop some files here, or click to select files</p>
             }
           </div>
+          {selectedGeneratedFile ?
+            <pre className="generated-file-content">
+              <code>
+                {new TextDecoder().decode(selectedGeneratedFile.content)}
+              </code>
+            </pre>
+            : null
+          }
         </div>
         <div className="editor-source">
           <h2>Source</h2>
