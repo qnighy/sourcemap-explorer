@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useDebugValue, useRef } from "react";
 
 interface DiffMemoState<T> {
   deps: any[];
@@ -10,12 +10,18 @@ export const useDiffMemo = <T>(f: (prev?: T) => T, deps: any[]): T => {
   if (state.current === null) {
     const value = f();
     state.current = { deps, value };
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useDebugValue(value);
     return value;
   } else if (!equalDeps(state.current.deps, deps)) {
     const value = f(state.current.value);
     state.current = { deps, value };
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useDebugValue(value);
     return value;
   } else {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useDebugValue(state.current.value);
     return state.current.value;
   }
 };
