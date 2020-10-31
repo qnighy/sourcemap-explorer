@@ -1,5 +1,7 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { SourceFileState, UserFileState } from './file_states';
 import { useUploader } from './uploader';
 import './App.css';
@@ -58,10 +60,14 @@ const FileListEntry: React.FC<FileListEntryProps> = (props) => {
   const removeThisFile = useCallback(() => removeFile(name), [name, removeFile]);
   return (
     <li className="file-list-entry">
-      {name}{file.state === "uploading" ? "..." : ""}
+      <div className="file-list-entry-inner">
+        {name}{file.state === "uploading" ? "..." : ""}
+      </div>
       {
         file.state === "uploading" || file.state === "uploaded" ?
-        <span className="file-list-remove" onClick={removeThisFile}>x</span> :
+        <button className="file-list-remove" onClick={removeThisFile}>
+          <FontAwesomeIcon icon={faTrash} />
+        </button> :
         null
       }
     </li>

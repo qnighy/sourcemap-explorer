@@ -17,14 +17,17 @@
 }
 
 .file-list-entry {
+  display: flex;
   border: 1px solid #dddddd;
   margin: 3px;
-  padding: 3px;
+  padding: 5px;
 }
-.file-list-entry:after {
-  clear: right;
+
+.file-list-entry-inner {
+  flex-grow: 1;
 }
 
 .file-list-remove {
   float: right;
+  margin: 1px;
 }
