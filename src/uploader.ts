@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { produce } from 'immer';
 
 export interface UploaderState {
   uploadedFiles: Map<string, FileState>;
@@ -21,15 +22,12 @@ export interface UploadedFileState {
 export const useUploader = (): UploaderState => {
   const [uploadedFiles, setUploadedFiles] = useState<Map<string, FileState>>(() => new Map());
   const removeFile = useCallback((name: string) => {
-    setUploadedFiles((oldState) => {
-      const state = new Map(oldState);
+    setUploadedFiles((state) => produce(state, (state) => {
       state.delete(name);
-      return state;
-    });
+    }));
   }, [setUploadedFiles]);
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    setUploadedFiles((oldState) => {
-      const state = new Map(oldState);
+    setUploadedFiles((state) => produce(state, (state) => {
       for (const file of acceptedFiles) {
         state.set(file.name, {
           state: "uploading",
@@ -37,23 +35,20 @@ export const useUploader = (): UploaderState => {
           content: state.get(file.name)?.content,
         });
       }
-      return state;
-    });
+    }));
     for (const file of acceptedFiles) {
       (async (file) => {
         const content = await file.arrayBuffer();
-        setUploadedFiles((oldState) => {
-          const oldFileState = oldState.get(file.name);
+        setUploadedFiles((state) => produce(state, (state) => {
+          const oldFileState = state.get(file.name);
           if (!oldFileState || oldFileState.state !== "uploading" || oldFileState.file !== file) {
-            return oldState;
+            return;
           }
-          const state = new Map(oldState);
           state.set(file.name, {
             state: "uploaded",
             content,
           });
-          return state;
-        });
+        }));
       })(file);
     }
   }, [setUploadedFiles]);
