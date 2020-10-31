@@ -11,6 +11,7 @@ const App: React.FC = () => {
       <h1>SourceMap Explorer</h1>
       <div className="editor">
         <div className="editor-generated">
+          <h2>Generated</h2>
           <ul>
             {
               Array.from(uploaderState.uploadedFiles.entries()).map(([name, file]) => (
@@ -27,7 +28,9 @@ const App: React.FC = () => {
             }
           </div>
         </div>
-        <div className="editor-source"></div>
+        <div className="editor-source">
+          <h2>Source</h2>
+        </div>
       </div>
     </div>
   );
