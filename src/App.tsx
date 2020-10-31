@@ -13,8 +13,8 @@ const App: React.FC = () => {
         <div className="editor-generated">
           <ul>
             {
-              Array.from(uploaderState.uploadedFiles.entries()).map(([name, _content]) => (
-                <li key={name}>{name}</li>
+              Array.from(uploaderState.uploadedFiles.entries()).map(([name, file]) => (
+                <li key={name}>{name}{file.state === "uploading" ? "..." : ""}</li>
               ))
             }
           </ul>
