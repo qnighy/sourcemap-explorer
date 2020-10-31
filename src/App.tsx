@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
@@ -12,6 +12,8 @@ const App: React.FC = () => {
   const uploaderState = useUploader();
   const parseResult = useDiffMemo((prev?: ParseResult) => parseFiles(uploaderState.uploadedFiles, prev), [uploaderState.uploadedFiles]);
   const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop: uploaderState.onDrop})
+
+  const [selectedGenerated, setSelectedGenerated] = useState<string | null>(null);
   return (
     <div className="App">
       <h1>SourceMap Explorer</h1>
@@ -21,7 +23,7 @@ const App: React.FC = () => {
           <ul className="file-list">
             {
               Array.from(uploaderState.userFiles.entries()).map(([name, file]) => (
-                <FileListEntry key={name} name={name} file={file} removeFile={uploaderState.removeFile} />
+                <FileListEntry key={name} name={name} file={file} selected={name === selectedGenerated} selectFile={setSelectedGenerated} removeFile={uploaderState.removeFile} />
               ))
             }
           </ul>
@@ -39,7 +41,7 @@ const App: React.FC = () => {
           <ul className="file-list">
             {
               Array.from(parseResult.sourceFiles.entries()).map(([name, file]) => (
-                <FileListEntry key={name} name={name} file={file} removeFile={uploaderState.removeFile} />
+                <FileListEntry key={name} name={name} file={file} selected={false} removeFile={uploaderState.removeFile} />
               ))
             }
           </ul>
@@ -52,24 +54,30 @@ const App: React.FC = () => {
 interface FileListEntryProps {
   name: string;
   file: UserFileState | SourceFileState;
+  selected: boolean;
   removeFile: (name: string) => void;
+  selectFile?: (name: string) => void;
 }
 
 const FileListEntry: React.FC<FileListEntryProps> = (props) => {
-  const { name, file, removeFile } = props;
+  const { name, file, selected, removeFile, selectFile } = props;
   const removeThisFile = useCallback(() => removeFile(name), [name, removeFile]);
+  const selectThisFile = useCallback(() => selectFile && selectFile(name), [name, selectFile]);
+  const classNames = ["file-list-entry", selected ? "selected" : undefined].filter(Boolean);
   return (
-    <li className="file-list-entry">
-      <div className="file-list-entry-inner">
-        {name}{file.state === "uploading" ? "..." : ""}
-      </div>
-      {
-        file.state === "uploading" || file.state === "uploaded" ?
-        <button className="file-list-remove" onClick={removeThisFile}>
-          <FontAwesomeIcon icon={faTrash} />
-        </button> :
-        null
-      }
+    <li className={classNames.join(" ")}>
+      <button onClick={selectThisFile} disabled={selected}>
+        <div className="file-list-entry-inner">
+          {name}{file.state === "uploading" ? "..." : ""}
+        </div>
+        {
+          file.state === "uploading" || file.state === "uploaded" ?
+          <button className="file-list-remove" onClick={removeThisFile}>
+            <FontAwesomeIcon icon={faTrash} />
+          </button> :
+          null
+        }
+      </button>
     </li>
   );
 };
