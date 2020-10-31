@@ -1,5 +1,13 @@
 import { FileState } from './uploader';
 
+export interface ParseResult {
+  files: Map<string, ParsedFile>;
+}
+
+const initResult = (): ParseResult => ({
+  files: new Map(),
+});
+
 export interface ParsedFile {
   content: ArrayBuffer;
   sourceMap?: SourceMapContent;
@@ -9,12 +17,12 @@ export interface SourceMapContent {
   json: {};
 }
 
-export const parseFiles = (uploadedFiles: Map<string, FileState>, prevFiles: Map<string, ParsedFile> = new Map()): Map<string, ParsedFile> => {
+export const parseFiles = (uploadedFiles: Map<string, FileState>, prev: ParseResult = initResult()): ParseResult => {
   const files = new Map<string, ParsedFile>();
   for (const [name, uploadedFile] of Array.from(uploadedFiles.entries())) {
     if (!uploadedFile.content) continue;
 
-    const prevFile = prevFiles.get(name);
+    const prevFile = prev.files.get(name);
     if (prevFile && prevFile.content === uploadedFile.content) {
       files.set(name, prevFile);
     } else {
@@ -22,12 +30,11 @@ export const parseFiles = (uploadedFiles: Map<string, FileState>, prevFiles: Map
     }
   }
 
-  // Return prevFiles if nothing has been changed.
-  if (equalFiles(prevFiles, files)) {
-    return prevFiles;
-  } else {
-    return files;
+  // Return prev if nothing has been changed.
+  if (equalFiles(prev.files, files)) {
+    return prev;
   }
+  return { files };
 };
 
 const parseFile = (name: string, content: ArrayBuffer): ParsedFile => {
