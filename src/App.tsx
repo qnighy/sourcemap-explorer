@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FileState, useUploader } from './Uploader';
+import { FileState, useUploader } from './uploader';
 import './App.css';
 
 const App: React.FC = () => {
