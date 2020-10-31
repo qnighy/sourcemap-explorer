@@ -1,8 +1,9 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FileState, useUploader } from './uploader';
+import { SourceFileState, UserFileState } from './file_states';
+import { useUploader } from './uploader';
 import './App.css';
-import { parseFiles, ParseResult, SourceFile } from './parse';
+import { parseFiles, ParseResult } from './parse';
 import { useDiffMemo } from './diff_memo';
 
 const App: React.FC = () => {
@@ -48,7 +49,7 @@ const App: React.FC = () => {
 
 interface FileListEntryProps {
   name: string;
-  file: FileState | SourceFile;
+  file: UserFileState | SourceFileState;
   removeFile: (name: string) => void;
 }
 

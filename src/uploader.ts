@@ -1,26 +1,15 @@
 import { useCallback, useState } from 'react';
 import { produce } from 'immer';
+import { UserFileState } from './file_states';
 
 export interface UploaderState {
-  uploadedFiles: Map<string, FileState>;
+  uploadedFiles: Map<string, UserFileState>;
   removeFile: (name: string) => void;
   onDrop: (acceptedFiles: File[]) => void;
 }
 
-export type FileState = UploadingFileState | UploadedFileState;
-export interface UploadingFileState {
-  state: "uploading";
-  file: File;
-  // old content, if any
-  content?: ArrayBuffer;
-}
-export interface UploadedFileState {
-  state: "uploaded";
-  content: ArrayBuffer;
-}
-
 export const useUploader = (): UploaderState => {
-  const [uploadedFiles, setUploadedFiles] = useState<Map<string, FileState>>(() => new Map());
+  const [uploadedFiles, setUploadedFiles] = useState<Map<string, UserFileState>>(() => new Map());
   const removeFile = useCallback((name: string) => {
     setUploadedFiles((state) => produce(state, (state) => {
       state.delete(name);

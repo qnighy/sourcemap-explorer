@@ -1,8 +1,8 @@
-import { FileState, UploadedFileState } from './uploader';
+import { SourceFileState, UserFileState } from './file_states';
 
 export interface ParseResult {
   files: Map<string, ParsedFile>;
-  sourceFiles: Map<string, SourceFile>;
+  sourceFiles: Map<string, SourceFileState>;
 }
 
 const initResult = (): ParseResult => ({
@@ -25,18 +25,7 @@ export interface SourceMapContent {
   mappings: string;
 }
 
-export type SourceFile = MissingSourceFile | BundledSourceFile | UploadedFileState;
-
-export interface MissingSourceFile {
-  state: "missing";
-  content?: undefined;
-}
-export interface BundledSourceFile {
-  state: "bundled";
-  content: ArrayBuffer;
-}
-
-export const parseFiles = (uploadedFiles: Map<string, FileState>, prev: ParseResult = initResult()): ParseResult => {
+export const parseFiles = (uploadedFiles: Map<string, UserFileState>, prev: ParseResult = initResult()): ParseResult => {
   const files = new Map<string, ParsedFile>();
   for (const [name, uploadedFile] of Array.from(uploadedFiles.entries())) {
     if (!uploadedFile.content) continue;
@@ -54,7 +43,7 @@ export const parseFiles = (uploadedFiles: Map<string, FileState>, prev: ParseRes
     return prev;
   }
 
-  const sourceFiles = new Map<string, SourceFile>();
+  const sourceFiles = new Map<string, SourceFileState>();
   for (const file of Array.from(files.values())) {
     if (file.sourceMap) {
       for (const source of file.sourceMap.sources) {
