@@ -1,22 +1,23 @@
 import { useCallback, useState } from 'react';
 import { produce } from 'immer';
-import { UserFileState } from './file_states';
+import { UploadedFileState, UserFileState } from './file_states';
 
 export interface UploaderState {
-  uploadedFiles: Map<string, UserFileState>;
+  userFiles: Map<string, UserFileState>;
+  uploadedFiles: Map<string, UploadedFileState>;
   removeFile: (name: string) => void;
   onDrop: (acceptedFiles: File[]) => void;
 }
 
 export const useUploader = (): UploaderState => {
-  const [uploadedFiles, setUploadedFiles] = useState<Map<string, UserFileState>>(() => new Map());
+  const [userFiles, setUserFiles] = useState<Map<string, UserFileState>>(() => new Map());
   const removeFile = useCallback((name: string) => {
-    setUploadedFiles((state) => produce(state, (state) => {
+    setUserFiles((state) => produce(state, (state) => {
       state.delete(name);
     }));
-  }, [setUploadedFiles]);
+  }, [setUserFiles]);
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    setUploadedFiles((state) => produce(state, (state) => {
+    setUserFiles((state) => produce(state, (state) => {
       for (const file of acceptedFiles) {
         state.set(file.name, {
           state: "uploading",
@@ -28,7 +29,7 @@ export const useUploader = (): UploaderState => {
     for (const file of acceptedFiles) {
       (async (file) => {
         const content = await file.arrayBuffer();
-        setUploadedFiles((state) => produce(state, (state) => {
+        setUserFiles((state) => produce(state, (state) => {
           const oldFileState = state.get(file.name);
           if (!oldFileState || oldFileState.state !== "uploading" || oldFileState.file !== file) {
             return;
@@ -40,9 +41,21 @@ export const useUploader = (): UploaderState => {
         }));
       })(file);
     }
-  }, [setUploadedFiles]);
+  }, [setUserFiles]);
+
+  const uploadedFiles: Map<string, UploadedFileState> = new Map();
+  for (const [name, file] of Array.from(userFiles.entries())) {
+    if (file.content) {
+      uploadedFiles.set(name, {
+        state: "uploaded",
+        content: file.content,
+      })
+    }
+  }
+
   return {
     uploadedFiles,
+    userFiles,
     removeFile,
     onDrop,
   }

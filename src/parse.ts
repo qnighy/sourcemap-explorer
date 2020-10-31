@@ -1,4 +1,4 @@
-import { SourceFileState, UserFileState } from './file_states';
+import { SourceFileState, UploadedFileState } from './file_states';
 
 export interface ParseResult {
   files: Map<string, ParsedFile>;
@@ -25,11 +25,9 @@ export interface SourceMapContent {
   mappings: string;
 }
 
-export const parseFiles = (uploadedFiles: Map<string, UserFileState>, prev: ParseResult = initResult()): ParseResult => {
+export const parseFiles = (uploadedFiles: Map<string, UploadedFileState>, prev: ParseResult = initResult()): ParseResult => {
   const files = new Map<string, ParsedFile>();
   for (const [name, uploadedFile] of Array.from(uploadedFiles.entries())) {
-    if (!uploadedFile.content) continue;
-
     const prevFile = prev.files.get(name);
     if (prevFile && prevFile.content === uploadedFile.content) {
       files.set(name, prevFile);
@@ -64,7 +62,7 @@ export const parseFiles = (uploadedFiles: Map<string, UserFileState>, prev: Pars
     }
   }
   for (const [name, uploadedFile] of Array.from(uploadedFiles.entries())) {
-    if (sourceFiles.has(name) && uploadedFile.content) {
+    if (sourceFiles.has(name)) {
       sourceFiles.set(name, { state: "uploaded", content: uploadedFile.content });
     }
   }

@@ -18,7 +18,7 @@ const App: React.FC = () => {
           <h2>Generated</h2>
           <ul className="file-list">
             {
-              Array.from(uploaderState.uploadedFiles.entries()).map(([name, file]) => (
+              Array.from(uploaderState.userFiles.entries()).map(([name, file]) => (
                 <FileListEntry key={name} name={name} file={file} removeFile={uploaderState.removeFile} />
               ))
             }
