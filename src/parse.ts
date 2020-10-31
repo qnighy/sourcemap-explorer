@@ -1,4 +1,4 @@
-import { FileState } from './uploader';
+import { FileState, UploadedFileState } from './uploader';
 
 export interface ParseResult {
   files: Map<string, ParsedFile>;
@@ -25,18 +25,14 @@ export interface SourceMapContent {
   mappings: string;
 }
 
-export type SourceFile = MissingSourceFile | BundledSourceFile | UploadedSourceFile;
+export type SourceFile = MissingSourceFile | BundledSourceFile | UploadedFileState;
 
 export interface MissingSourceFile {
-  type: "missing";
+  state: "missing";
   content?: undefined;
 }
 export interface BundledSourceFile {
-  type: "bundled";
-  content: ArrayBuffer;
-}
-export interface UploadedSourceFile {
-  type: "uploaded";
+  state: "bundled";
   content: ArrayBuffer;
 }
 
@@ -63,7 +59,7 @@ export const parseFiles = (uploadedFiles: Map<string, FileState>, prev: ParseRes
     if (file.sourceMap) {
       for (const source of file.sourceMap.sources) {
         // TODO: sourceRoot
-        sourceFiles.set(source, { type: "missing" });
+        sourceFiles.set(source, { state: "missing" });
       }
     }
   }
@@ -73,14 +69,14 @@ export const parseFiles = (uploadedFiles: Map<string, FileState>, prev: ParseRes
         // TODO: sourceRoot
         const sourceContent = file.sourceMap.sourcesContent[i];
         if (sourceContent) {
-          sourceFiles.set(source, { type: "bundled", content: new TextEncoder().encode(sourceContent) });
+          sourceFiles.set(source, { state: "bundled", content: new TextEncoder().encode(sourceContent) });
         }
       }
     }
   }
   for (const [name, uploadedFile] of Array.from(uploadedFiles.entries())) {
     if (sourceFiles.has(name) && uploadedFile.content) {
-      sourceFiles.set(name, { type: "uploaded", content: uploadedFile.content });
+      sourceFiles.set(name, { state: "uploaded", content: uploadedFile.content });
     }
   }
   return {

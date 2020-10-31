@@ -2,12 +2,12 @@ import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FileState, useUploader } from './uploader';
 import './App.css';
-import { parseFiles, ParseResult } from './parse';
+import { parseFiles, ParseResult, SourceFile } from './parse';
 import { useDiffMemo } from './diff_memo';
 
 const App: React.FC = () => {
   const uploaderState = useUploader();
-  const _parseResult = useDiffMemo((prev?: ParseResult) => parseFiles(uploaderState.uploadedFiles, prev), [uploaderState.uploadedFiles]);
+  const parseResult = useDiffMemo((prev?: ParseResult) => parseFiles(uploaderState.uploadedFiles, prev), [uploaderState.uploadedFiles]);
   const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop: uploaderState.onDrop})
   return (
     <div className="App">
@@ -33,6 +33,13 @@ const App: React.FC = () => {
         </div>
         <div className="editor-source">
           <h2>Source</h2>
+          <ul className="file-list">
+            {
+              Array.from(parseResult.sourceFiles.entries()).map(([name, file]) => (
+                <FileListEntry key={name} name={name} file={file} removeFile={uploaderState.removeFile} />
+              ))
+            }
+          </ul>
         </div>
       </div>
     </div>
@@ -41,7 +48,7 @@ const App: React.FC = () => {
 
 interface FileListEntryProps {
   name: string;
-  file: FileState;
+  file: FileState | SourceFile;
   removeFile: (name: string) => void;
 }
 
