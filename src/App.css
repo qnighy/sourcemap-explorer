@@ -10,3 +10,21 @@
 .editor-source {
   border-left: 1px solid black;
 }
+
+.file-list {
+  padding-left: 0;
+  list-style-type: none;
+}
+
+.file-list-entry {
+  border: 1px solid #dddddd;
+  margin: 3px;
+  padding: 3px;
+}
+.file-list-entry:after {
+  clear: right;
+}
+
+.file-list-remove {
+  float: right;
+}
