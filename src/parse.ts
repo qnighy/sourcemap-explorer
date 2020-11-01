@@ -22,9 +22,24 @@ export interface SourceMapContent {
   sourceRoot?: string;
   sources: string[];
   sourcesContent?: (string | null)[];
-  names: string[];
-  mappings: string;
+  mappings: Segment[][];
 }
+
+export interface UnmappedSegment {
+  column: number;
+  source?: undefined;
+  sourceLine?: undefined;
+  sourceColumn?: undefined;
+  name?: undefined;
+}
+export interface MappedSegment {
+  column: number;
+  source: string;
+  sourceLine: number;
+  sourceColumn: number;
+  name?: string;
+}
+export type Segment = UnmappedSegment | MappedSegment;
 
 export const parseFiles = (uploadedFiles: Map<string, UploadedFileState>, prev: ParseResult = initResult()): ParseResult => {
   const files = new Map<string, ParsedFile>();
@@ -97,7 +112,9 @@ const parseSourceMap = (content: ArrayBuffer): SourceMapContent => {
   if (typeof json !== "object" || json === null || Array.isArray(json)) {
     throw new Error("SourecMap should be an object");
   }
-  const { version, file, sourceRoot, sources, sourcesContent, names, mappings } = json as { [key in keyof SourceMapContent]?: unknown };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _typecheck_json: object = json;
+  const { version, file, sourceRoot, sources, sourcesContent, names, mappings } = json as { [key in string]?: unknown };
   if (version !== 3) {
     throw new Error("Invalid version");
   }
@@ -125,8 +142,7 @@ const parseSourceMap = (content: ArrayBuffer): SourceMapContent => {
     sourceRoot,
     sources,
     sourcesContent,
-    names,
-    mappings,
+    mappings: parseMappings(mappings, sources, names),
   };
 };
 
@@ -151,3 +167,85 @@ const equalFiles = (files1: Map<string, ParsedFile>, files2: Map<string, ParsedF
   }
   return true;
 };
+
+const parseMappings = (mappings_: string, sources: string[], names: string[]): Segment[][] => {
+  const mappings = mappings_ + ";";
+  const lines: Segment[][] = [];
+  let segments: Segment[] = [];
+  let lastColumn = 0;
+  let lastSourceIndex = 0;
+  let lastSourceLine = 0;
+  let lastSourceColumn = 0;
+  let lastNameIndex = 0;
+  let currentSegment: number[] = [];
+  let current = 0;
+  let currentBits = 0;
+  for (let i = 0; i < mappings.length; i++) {
+    const charCode = mappings.charCodeAt(i);
+    if (charCode === 0x3B /* ; */ || charCode === 0x2C /* , */) {
+      if (current !== 0) throw new Error("VLQ runover");
+      if (currentSegment.length === 0) continue;
+      // TODO: check monotonicity
+      lastColumn += toSigned(currentSegment[0]);
+      if (currentSegment.length === 4 || currentSegment.length === 5) {
+        lastSourceIndex += toSigned(currentSegment[1]);
+        lastSourceLine += toSigned(currentSegment[2]);
+        lastSourceColumn += toSigned(currentSegment[3]);
+        if (currentSegment.length === 5) {
+          lastNameIndex += toSigned(currentSegment[4]);
+        }
+      } else if (currentSegment.length !== 1) {
+        throw new Error("Invalid segment length");
+      }
+      segments.push({
+        column: lastColumn,
+        // TODO: check index
+        source: sources[lastSourceIndex],
+        sourceLine: lastSourceLine,
+        sourceColumn: lastSourceColumn,
+        name: currentSegment.length === 5 ? names[lastNameIndex] : undefined,
+      });
+      currentSegment = [];
+      if (charCode === 0x3B /* ; */) {
+        lines.push(segments);
+        segments = [];
+        lastColumn = 0;
+      }
+      continue;
+    }
+    const b = base64val(charCode);
+    if (b < 32) {
+      currentSegment.push(current | (b << currentBits));
+      current = 0;
+      currentBits = 0;
+    } else {
+      current |= (b << (currentBits & 31));
+      currentBits += 5;
+    }
+  }
+  return lines;
+}
+
+const base64val = (charCode: number): number => {
+  if (charCode >= 0x41 /* A */ && charCode <= 0x5A /* Z */) {
+    return charCode - 0x41;
+  } else if (charCode >= 0x61 /* a */ && charCode <= 0x7A /* z */) {
+    return charCode - (0x61 - 26);
+  } else if (charCode >= 0x30 /* 0 */ && charCode <= 0x39 /* 9 */) {
+    return charCode + (52 - 0x30);
+  } else if (charCode === 0x2B /* + */) {
+    return 62;
+  } else if (charCode === 0x2F /* / */) {
+    return 63;
+  } else {
+    throw new Error(`Invalid base64 value: ${charCode}`);
+  }
+};
+
+const toSigned = (n: number): number => {
+  if (n & 1) {
+    return ~(n >> 1);
+  } else {
+    return (n >> 1);
+  }
+}
