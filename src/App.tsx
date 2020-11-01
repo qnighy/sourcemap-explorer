@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { SourceFileState, UserFileState } from './file_states';
 import { useUploader } from './uploader';
 import './App.css';
@@ -26,7 +26,7 @@ const App: React.FC = () => {
       <div className="editor">
         <div className="editor-generated">
           <h2>Generated</h2>
-          <ul className="file-list">
+          <ul className={selectedGeneratedFile ? "file-list closed" : "file-list"}>
             {
               Array.from(uploaderState.userFiles.entries()).map(([name, file]) => (
                 <FileListEntry key={name} name={name} file={file} selected={name === selectedGenerated} selectFile={setSelectedGenerated} removeFile={uploaderState.removeFile} />
@@ -35,7 +35,15 @@ const App: React.FC = () => {
             <FileListAddButton onDrop={uploaderState.onDrop} />
           </ul>
           {selectedGeneratedFile ?
-            <SourceMappedText text={new TextDecoder().decode(selectedGeneratedFile.content)} mappings={mappings} />
+            <>
+              <div className="file-heading">
+                <div className="file-heading-inner">{selectedGenerated}</div>
+                <button onClick={() => setSelectedGenerated(undefined)}>
+                  <FontAwesomeIcon icon={faChevronDown} />
+                </button>
+              </div>
+              <SourceMappedText text={new TextDecoder().decode(selectedGeneratedFile.content)} mappings={mappings} />
+            </>
             : null
           }
         </div>
