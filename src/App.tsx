@@ -25,7 +25,6 @@ const App: React.FC = () => {
       <h1>SourceMap Explorer</h1>
       <div className="editor">
         <div className="editor-generated">
-          <h2>Generated</h2>
           <ul className={selectedGeneratedFile ? "file-list closed" : "file-list"}>
             {
               Array.from(uploaderState.userFiles.entries()).map(([name, file]) => (
@@ -48,7 +47,6 @@ const App: React.FC = () => {
           }
         </div>
         <div className="editor-source">
-          <h2>Source</h2>
           <ul className="file-list">
             {
               Array.from(parseResult.sourceFiles.entries()).map(([name, file]) => (
