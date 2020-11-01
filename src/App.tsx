@@ -7,7 +7,6 @@ import { useUploader } from './uploader';
 import './App.css';
 import { parseFiles, ParseResult, Segment } from './parse';
 import { useDiffMemo } from './diff_memo';
-import { isLineBreak } from 'typescript';
 
 const App: React.FC = () => {
   const uploaderState = useUploader();
