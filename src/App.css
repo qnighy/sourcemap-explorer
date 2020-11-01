@@ -116,5 +116,8 @@ pre.generated-file-content {
   border: 1px solid #cccccc;
 }
 .segment-mapped.highlight {
-  border: 1px solid #cccccc;
+  background: #ddeeee;
+}
+.segment-mapped.highlight:nth-child(even) {
+  background: #eeddee;
 }

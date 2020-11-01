@@ -21,11 +21,13 @@ const App: React.FC = () => {
     setLeftFilelistOpen(false);
     setSelectedGenerated(name);
   }, [setLeftFilelistOpen, setSelectedGenerated]);
+  const [selectSegmentLeft, setSelectSegmentLeft] = useState<[number, number] | undefined>();
   const [highlightRight, setHighlightRight] = useState<[number, number] | undefined>();
-  const selectRightFile = useCallback((name: string, highlight?: [number, number]) => {
+  const selectRightFile = useCallback((name: string, highlight?: [[number, number], [number, number]]) => {
     setRightFilelistOpen(false);
     setSelectedRight(name);
-    setHighlightRight(highlight);
+    setSelectSegmentLeft(highlight ? highlight[0] : undefined);
+    setHighlightRight(highlight ? highlight[1] : undefined);
   }, [setRightFilelistOpen, setSelectedRight]);
   const selectedGeneratedFile = selectedGenerated !== undefined ? uploaderState.uploadedFiles.get(selectedGenerated) : undefined;
   const selectedGeneratedParsed = selectedGenerated !== undefined ? parseResult.files.get(selectedGenerated) : undefined;
@@ -63,7 +65,7 @@ const App: React.FC = () => {
                   <FontAwesomeIcon icon={faChevronDown} />
                 </button>
               </div>
-              <SourceMappedText text={new TextDecoder().decode(selectedGeneratedFile.content)} mappings={mappings} openRight={selectRightFile} />
+              <SourceMappedText text={new TextDecoder().decode(selectedGeneratedFile.content)} mappings={mappings} openRight={selectRightFile} highlight={selectSegmentLeft} />
             </>
             : null
           }
@@ -150,7 +152,7 @@ interface SourceMappedTextProps {
   text: string;
   mappings?: Segment[][];
   highlight?: [number, number];
-  openRight?: (name: string, highlight?: [number, number]) => void;
+  openRight?: (name: string, highlight?: [[number, number], [number, number]]) => void;
 }
 
 const SourceMappedText: React.FC<SourceMappedTextProps> = (props) => {
@@ -162,6 +164,7 @@ const SourceMappedText: React.FC<SourceMappedTextProps> = (props) => {
           props.text.split("\n").map((line, lineno) => (
             <SourceMappedLine
               key={lineno}
+              lineno={lineno}
               line={line}
               mappings={mappings[lineno]}
               highlight={
@@ -177,10 +180,11 @@ const SourceMappedText: React.FC<SourceMappedTextProps> = (props) => {
 };
 
 interface SourceMappedLineProps {
+  lineno: number;
   line: string;
   mappings?: Segment[];
   highlight?: number;
-  openRight?: (name: string, highlight?: [number, number]) => void;
+  openRight?: (name: string, highlight?: [[number, number], [number, number]]) => void;
 }
 
 const SourceMappedLine: React.FC<SourceMappedLineProps> = (props) => {
@@ -197,6 +201,7 @@ const SourceMappedLine: React.FC<SourceMappedLineProps> = (props) => {
           const segmentText = props.line.substring(mapping.column, nextColumn);
           return <SourceMappedSegment
             key={mapping.column}
+            lineno={props.lineno}
             segmentText={segmentText}
             mapping={mapping}
             highlight={props.highlight === mapping.column}
@@ -210,19 +215,23 @@ const SourceMappedLine: React.FC<SourceMappedLineProps> = (props) => {
 };
 
 interface SourceMappedSegmentProps {
+  lineno: number;
   segmentText: string;
   mapping: Segment;
   highlight: boolean;
-  openRight?: (name: string, highlight?: [number, number]) => void;
+  openRight?: (name: string, highlight?: [[number, number], [number, number]]) => void;
 }
 
 const SourceMappedSegment: React.FC<SourceMappedSegmentProps> = (props) => {
   const { segmentText, mapping, highlight, openRight } = props;
   const openThisRight = useCallback(() => {
     if (openRight && mapping.source) {
-      openRight(mapping.source, [mapping.sourceLine, mapping.sourceColumn]);
+      openRight(mapping.source, [
+        [props.lineno, mapping.column],
+        [mapping.sourceLine, mapping.sourceColumn],
+      ]);
     }
-  }, [openRight, mapping.source, mapping.sourceLine, mapping.sourceColumn]);
+  }, [openRight, mapping.source, props.lineno, mapping.column, mapping.sourceLine, mapping.sourceColumn]);
   if (mapping.source) {
     return <span className={highlight ? "segment-mapped highlight" : "segment-mapped"} onClick={openThisRight}>{segmentText}</span>;
   } else {
