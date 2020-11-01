@@ -21,6 +21,10 @@ const App: React.FC = () => {
     setLeftFilelistOpen(false);
     setSelectedGenerated(name);
   }, [setLeftFilelistOpen, setSelectedGenerated]);
+  const selectRightFile = useCallback((name: string) => {
+    setRightFilelistOpen(false);
+    setSelectedRight(name);
+  }, [setRightFilelistOpen, setSelectedRight]);
   const selectedGeneratedFile = selectedGenerated !== undefined ? uploaderState.uploadedFiles.get(selectedGenerated) : undefined;
   const selectedGeneratedParsed = selectedGenerated !== undefined ? parseResult.files.get(selectedGenerated) : undefined;
   const selectedRightFile = selectedRight !== undefined ? parseResult.sourceFiles.get(selectedRight) : undefined;
@@ -59,7 +63,7 @@ const App: React.FC = () => {
           <ul className={(selectedRightFile && selectedRightFile.state !== "missing" && !rightFilelistOpen) ? "file-list closed" : "file-list"}>
             {
               Array.from(parseResult.sourceFiles.entries()).map(([name, file]) => (
-                <FileListEntry key={name} name={name} file={file} selected={false} removeFile={uploaderState.removeFile} />
+                <FileListEntry key={name} name={name} file={file} selected={false} selectFile={selectRightFile} removeFile={uploaderState.removeFile} />
               ))
             }
           </ul>
