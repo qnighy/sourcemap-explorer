@@ -67,6 +67,9 @@
   flex-grow: 1;
 }
 
+.file-list-select {
+  margin: 1px;
+}
 .file-list-remove {
   margin: 1px;
 }
