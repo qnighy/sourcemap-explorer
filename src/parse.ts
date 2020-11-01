@@ -184,7 +184,13 @@ const parseMappings = (mappings_: string, sources: string[], names: string[]): S
     const charCode = mappings.charCodeAt(i);
     if (charCode === 0x3B /* ; */ || charCode === 0x2C /* , */) {
       if (current !== 0 || currentBits !== 0) throw new Error("VLQ runover");
-      if (currentSegment.length === 0) continue;
+      if (currentSegment.length === 0 && charCode === 0x3B /* ; */) {
+        lines.push(segments);
+        segments = [];
+        lastColumn = 0;
+        continue;
+      }
+      if (currentSegment.length === 0) throw new Error("Segment too short");
       // TODO: check monotonicity
       lastColumn += toSigned(currentSegment[0]);
       if (currentSegment.length === 4 || currentSegment.length === 5) {
