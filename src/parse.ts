@@ -250,7 +250,7 @@ const base64val = (charCode: number): number => {
 
 const toSigned = (n: number): number => {
   if (n & 1) {
-    return ~(n >> 1);
+    return -(n >> 1);
   } else {
     return (n >> 1);
   }
