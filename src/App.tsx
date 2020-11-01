@@ -12,7 +12,13 @@ const App: React.FC = () => {
   const uploaderState = useUploader();
   const parseResult = useDiffMemo((prev?: ParseResult) => parseFiles(uploaderState.uploadedFiles, prev), [uploaderState.uploadedFiles]);
 
+  const [leftFilelistOpen, setLeftFilelistOpen] = useState(false);
+
   const [selectedGenerated, setSelectedGenerated] = useState<string | undefined>(undefined);
+  const selectFile = useCallback((name: string) => {
+    setLeftFilelistOpen(false);
+    setSelectedGenerated(name);
+  }, [setLeftFilelistOpen, setSelectedGenerated]);
   const selectedGeneratedFile = selectedGenerated !== undefined ? uploaderState.uploadedFiles.get(selectedGenerated) : undefined;
   const selectedGeneratedParsed = selectedGenerated !== undefined ? parseResult.files.get(selectedGenerated) : undefined;
   // TODO: relative path
@@ -25,10 +31,10 @@ const App: React.FC = () => {
       <h1>SourceMap Explorer</h1>
       <div className="editor">
         <div className="editor-generated">
-          <ul className={selectedGeneratedFile ? "file-list closed" : "file-list"}>
+          <ul className={(selectedGeneratedFile && !leftFilelistOpen) ? "file-list closed" : "file-list"}>
             {
               Array.from(uploaderState.userFiles.entries()).map(([name, file]) => (
-                <FileListEntry key={name} name={name} file={file} selected={name === selectedGenerated} selectFile={setSelectedGenerated} removeFile={uploaderState.removeFile} />
+                <FileListEntry key={name} name={name} file={file} selected={name === selectedGenerated} selectFile={selectFile} removeFile={uploaderState.removeFile} />
               ))
             }
             <FileListAddButton onDrop={uploaderState.onDrop} />
@@ -37,7 +43,7 @@ const App: React.FC = () => {
             <>
               <div className="file-heading">
                 <div className="file-heading-inner">{selectedGenerated}</div>
-                <button onClick={() => setSelectedGenerated(undefined)}>
+                <button onClick={() => setLeftFilelistOpen(true)}>
                   <FontAwesomeIcon icon={faChevronDown} />
                 </button>
               </div>
