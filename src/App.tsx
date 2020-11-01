@@ -1,11 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faChevronDown, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { SourceFileState, UserFileState } from './file_states';
 import { useUploader } from './uploader';
 import './App.css';
-import { parseFiles, ParseResult, Segment } from './parse';
+import { MappedSegment, parseFiles, ParseResult, Segment } from './parse';
 import { useDiffMemo } from './diff_memo';
 
 const App: React.FC = () => {
@@ -21,11 +21,11 @@ const App: React.FC = () => {
     setLeftFilelistOpen(false);
     setSelectedGenerated(name);
   }, [setLeftFilelistOpen, setSelectedGenerated]);
-  const [dummyMappings, setDummyMappings] = useState<Segment[][] | undefined>();
-  const selectRightFile = useCallback((name: string, dummyMappings?: Segment[][]) => {
+  const [highlightRight, setHighlightRight] = useState<[number, number] | undefined>();
+  const selectRightFile = useCallback((name: string, highlight?: [number, number]) => {
     setRightFilelistOpen(false);
     setSelectedRight(name);
-    setDummyMappings(dummyMappings);
+    setHighlightRight(highlight);
   }, [setRightFilelistOpen, setSelectedRight]);
   const selectedGeneratedFile = selectedGenerated !== undefined ? uploaderState.uploadedFiles.get(selectedGenerated) : undefined;
   const selectedGeneratedParsed = selectedGenerated !== undefined ? parseResult.files.get(selectedGenerated) : undefined;
@@ -35,6 +35,13 @@ const App: React.FC = () => {
     selectedGeneratedParsed?.sourceMapRef ?
     parseResult.files.get(selectedGeneratedParsed.sourceMapRef)?.sourceMap?.mappings :
     undefined;
+  const inversedMappings = useMemo<Segment[][] | undefined>(() => {
+    if (selectedGenerated && selectedRight && mappings) {
+      return inverseMappings(selectedGenerated, selectedRight, mappings);
+    } else {
+      return undefined;
+    }
+  }, [selectedGenerated, selectedRight, mappings]);
   return (
     <div className="App">
       <h1>SourceMap Explorer</h1>
@@ -77,7 +84,7 @@ const App: React.FC = () => {
                   <FontAwesomeIcon icon={faChevronDown} />
                 </button>
               </div>
-              <SourceMappedText text={new TextDecoder().decode(selectedRightFile.content)} mappings={dummyMappings} />
+              <SourceMappedText text={new TextDecoder().decode(selectedRightFile.content)} mappings={inversedMappings} highlight={highlightRight} />
             </>
             : null
           }
@@ -142,7 +149,8 @@ const FileListAddButton: React.FC<FileListAddButtonProps> = (props) => {
 interface SourceMappedTextProps {
   text: string;
   mappings?: Segment[][];
-  openRight?: (name: string, dummyMappings?: Segment[][]) => void;
+  highlight?: [number, number];
+  openRight?: (name: string, highlight?: [number, number]) => void;
 }
 
 const SourceMappedText: React.FC<SourceMappedTextProps> = (props) => {
@@ -152,7 +160,15 @@ const SourceMappedText: React.FC<SourceMappedTextProps> = (props) => {
       <code>
         {
           props.text.split("\n").map((line, lineno) => (
-            <SourceMappedLine key={lineno} line={line} mappings={mappings[lineno]} openRight={props.openRight} />
+            <SourceMappedLine
+              key={lineno}
+              line={line}
+              mappings={mappings[lineno]}
+              highlight={
+                props.highlight ? props.highlight[0] === lineno ? props.highlight[1] : undefined : undefined
+              }
+              openRight={props.openRight}
+            />
           ))
         }
       </code>
@@ -163,7 +179,8 @@ const SourceMappedText: React.FC<SourceMappedTextProps> = (props) => {
 interface SourceMappedLineProps {
   line: string;
   mappings?: Segment[];
-  openRight?: (name: string, dummyMappings?: Segment[][]) => void;
+  highlight?: number;
+  openRight?: (name: string, highlight?: [number, number]) => void;
 }
 
 const SourceMappedLine: React.FC<SourceMappedLineProps> = (props) => {
@@ -178,7 +195,13 @@ const SourceMappedLine: React.FC<SourceMappedLineProps> = (props) => {
           const nextColumn = mappings[i + 1]?.column ?? props.line.length;
           if (mapping.column >= nextColumn) return null;
           const segmentText = props.line.substring(mapping.column, nextColumn);
-          return <SourceMappedSegment key={mapping.column} segmentText={segmentText} mapping={mapping} openRight={props.openRight} />
+          return <SourceMappedSegment
+            key={mapping.column}
+            segmentText={segmentText}
+            mapping={mapping}
+            highlight={props.highlight === mapping.column}
+            openRight={props.openRight}
+          />
         })
       }
       {"\n"}
@@ -189,30 +212,48 @@ const SourceMappedLine: React.FC<SourceMappedLineProps> = (props) => {
 interface SourceMappedSegmentProps {
   segmentText: string;
   mapping: Segment;
-  openRight?: (name: string, dummyMappings?: Segment[][]) => void;
+  highlight: boolean;
+  openRight?: (name: string, highlight?: [number, number]) => void;
 }
 
 const SourceMappedSegment: React.FC<SourceMappedSegmentProps> = (props) => {
-  const { segmentText, mapping, openRight } = props;
+  const { segmentText, mapping, highlight, openRight } = props;
   const openThisRight = useCallback(() => {
     if (openRight && mapping.source) {
-      const dummyMappings: Segment[][] = new Array(mapping.sourceLine + 1).map(() => []);
-      dummyMappings[mapping.sourceLine] = [{
-        column: mapping.sourceColumn,
-        source: "_",
-        sourceLine: 0,
-        sourceColumn: 0,
-      }, {
-        column: mapping.sourceColumn + 1,
-      }];
-      openRight(mapping.source, dummyMappings);
+      openRight(mapping.source, [mapping.sourceLine, mapping.sourceColumn]);
     }
   }, [openRight, mapping.source, mapping.sourceLine, mapping.sourceColumn]);
   if (mapping.source) {
-    return <span className="segment-mapped" onClick={openThisRight}>{segmentText}</span>;
+    return <span className={highlight ? "segment-mapped highlight" : "segment-mapped"} onClick={openThisRight}>{segmentText}</span>;
   } else {
     return <span className="segment-unmapped">{segmentText}</span>;
   }
+};
+
+const inverseMappings = (name: string, sourceName: string, mappings: Segment[][]): Segment[][] => {
+  const newMappings: MappedSegment[][] = [];
+  for (const [lineno, line] of Array.from(mappings.entries())) {
+    for (const segment of line) {
+      if (!segment.source) continue;
+      if (segment.source !== sourceName) continue;
+      while (newMappings.length <= segment.sourceLine) newMappings.push([]);
+      newMappings[segment.sourceLine].push({
+        column: segment.sourceColumn,
+        source: name,
+        sourceLine: lineno,
+        sourceColumn: segment.column,
+      });
+    }
+  }
+  for (const line of newMappings) {
+    line.sort((a, b) => {
+      if (a.column !== b.column) return a.column - b.column;
+      // For sort reproducibility
+      if (a.sourceLine !== b.sourceLine) return a.sourceLine - b.sourceLine;
+      return a.sourceLine - b.sourceLine;
+    });
+  }
+  return newMappings;
 };
 
 export default App;
