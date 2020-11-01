@@ -5,8 +5,9 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { SourceFileState, UserFileState } from './file_states';
 import { useUploader } from './uploader';
 import './App.css';
-import { parseFiles, ParseResult } from './parse';
+import { parseFiles, ParseResult, Segment } from './parse';
 import { useDiffMemo } from './diff_memo';
+import { isLineBreak } from 'typescript';
 
 const App: React.FC = () => {
   const uploaderState = useUploader();
@@ -15,14 +16,12 @@ const App: React.FC = () => {
 
   const [selectedGenerated, setSelectedGenerated] = useState<string | undefined>(undefined);
   const selectedGeneratedFile = selectedGenerated !== undefined ? uploaderState.uploadedFiles.get(selectedGenerated) : undefined;
-  if (selectedGeneratedFile) {
-    // TODO: relative path
-    const selectedGeneratedParsed = selectedGenerated !== undefined ? parseResult.files.get(selectedGenerated) : undefined;
-    if (selectedGeneratedParsed && selectedGeneratedParsed.sourceMapRef) {
-      const mapFile = parseResult.files.get(selectedGeneratedParsed.sourceMapRef);
-      console.log(mapFile?.sourceMap?.mappings);
-    }
-  }
+  const selectedGeneratedParsed = selectedGenerated !== undefined ? parseResult.files.get(selectedGenerated) : undefined;
+  // TODO: relative path
+  const mappings =
+    selectedGeneratedParsed?.sourceMapRef ?
+    parseResult.files.get(selectedGeneratedParsed.sourceMapRef)?.sourceMap?.mappings :
+    undefined;
   return (
     <div className="App">
       <h1>SourceMap Explorer</h1>
@@ -45,11 +44,7 @@ const App: React.FC = () => {
             }
           </div>
           {selectedGeneratedFile ?
-            <pre className="generated-file-content">
-              <code>
-                {new TextDecoder().decode(selectedGeneratedFile.content)}
-              </code>
-            </pre>
+            <SourceMappedText text={new TextDecoder().decode(selectedGeneratedFile.content)} mappings={mappings} />
             : null
           }
         </div>
@@ -96,6 +91,55 @@ const FileListEntry: React.FC<FileListEntryProps> = (props) => {
         }
       </button>
     </li>
+  );
+};
+
+interface SourceMappedTextProps {
+  text: string;
+  mappings?: Segment[][];
+}
+
+const SourceMappedText: React.FC<SourceMappedTextProps> = (props) => {
+  const mappings = props.mappings ?? [];
+  return (
+    <pre className="generated-file-content">
+      <code>
+        {
+          props.text.split("\n").map((line, lineno) => (
+            <SourceMappedLine key={lineno} line={line} mappings={mappings[lineno]} />
+          ))
+        }
+      </code>
+    </pre>
+  );
+};
+
+interface SourceMappedLineProps {
+  line: string;
+  mappings?: Segment[];
+}
+
+const SourceMappedLine: React.FC<SourceMappedLineProps> = (props) => {
+  let mappings = props.mappings ?? [];
+  if (mappings.length === 0 || mappings[0].column > 0) {
+    mappings = [{ column: 0 }].concat(mappings);
+  }
+  return (
+    <>
+      {
+        mappings.map((mapping, i) => {
+          const nextColumn = mappings[i + 1]?.column ?? props.line.length;
+          if (mapping.column >= nextColumn) return null;
+          const segmentText = props.line.substring(mapping.column, nextColumn);
+          if (mapping.source) {
+            return <span key={mapping.column} className="segment-mapped">{segmentText}</span>;
+          } else {
+            return <span key={mapping.column} className="segment-unmapped">{segmentText}</span>;
+          }
+        })
+      }
+      {"\n"}
+    </>
   );
 };
 
