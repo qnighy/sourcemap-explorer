@@ -69,6 +69,10 @@
 
   padding: 0 5px;
 }
+.file-list-add-button:hover {
+  background-color: #f3f3f3;
+  border: 1px solid #cccccc;
+}
 
 .file-heading {
   display: flex;
@@ -79,6 +83,10 @@
   min-height: 34px;
 
   padding: 0 5px;
+}
+.file-heading:hover {
+  background-color: #f3f3f3;
+  border: 1px solid #cccccc;
 }
 
 .file-heading-inner {

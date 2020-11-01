@@ -41,7 +41,7 @@ const App: React.FC = () => {
           </ul>
           {selectedGeneratedFile ?
             <>
-              <div className="file-heading">
+              <div className="file-heading" onClick={() => setLeftFilelistOpen(true)}>
                 <div className="file-heading-inner">{selectedGenerated}</div>
                 <button onClick={() => setLeftFilelistOpen(true)}>
                   <FontAwesomeIcon icon={faChevronDown} />
