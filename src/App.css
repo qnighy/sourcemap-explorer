@@ -56,6 +56,18 @@
   margin: 1px;
 }
 
+.file-list-add-button {
+  /* for vertical align */
+  display: flex;
+  align-items: center;
+
+  border: 1px solid #dddddd;
+  margin: 3px;
+  min-height: 34px;
+
+  padding: 0 5px;
+}
+
 pre.generated-file-content {
   white-space: pre-wrap;
   word-break: break-all;

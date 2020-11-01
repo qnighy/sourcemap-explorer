@@ -11,7 +11,6 @@ import { useDiffMemo } from './diff_memo';
 const App: React.FC = () => {
   const uploaderState = useUploader();
   const parseResult = useDiffMemo((prev?: ParseResult) => parseFiles(uploaderState.uploadedFiles, prev), [uploaderState.uploadedFiles]);
-  const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop: uploaderState.onDrop})
 
   const [selectedGenerated, setSelectedGenerated] = useState<string | undefined>(undefined);
   const selectedGeneratedFile = selectedGenerated !== undefined ? uploaderState.uploadedFiles.get(selectedGenerated) : undefined;
@@ -33,15 +32,8 @@ const App: React.FC = () => {
                 <FileListEntry key={name} name={name} file={file} selected={name === selectedGenerated} selectFile={setSelectedGenerated} removeFile={uploaderState.removeFile} />
               ))
             }
+            <FileListAddButton onDrop={uploaderState.onDrop} />
           </ul>
-          <div {...getRootProps()}>
-            <input {...getInputProps()} />
-            {
-              isDragActive ?
-                <p>Drop the files here ...</p> :
-                <p>Drag 'n' drop some files here, or click to select files</p>
-            }
-          </div>
           {selectedGeneratedFile ?
             <SourceMappedText text={new TextDecoder().decode(selectedGeneratedFile.content)} mappings={mappings} />
             : null
@@ -89,6 +81,24 @@ const FileListEntry: React.FC<FileListEntryProps> = (props) => {
           null
         }
       </button>
+    </li>
+  );
+};
+
+interface FileListAddButtonProps {
+  onDrop: (uploadedFiles: File[]) => void;
+}
+
+const FileListAddButton: React.FC<FileListAddButtonProps> = (props) => {
+  const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop: props.onDrop})
+  return (
+    <li className="file-list-add-button" {...getRootProps()}>
+      <input {...getInputProps()} />
+      {
+        isDragActive ?
+          <div>Drop the files here ...</div> :
+          <span>Drag 'n' drop some files here, or click to select files</span>
+      }
     </li>
   );
 };
