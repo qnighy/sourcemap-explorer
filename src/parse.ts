@@ -183,7 +183,7 @@ const parseMappings = (mappings_: string, sources: string[], names: string[]): S
   for (let i = 0; i < mappings.length; i++) {
     const charCode = mappings.charCodeAt(i);
     if (charCode === 0x3B /* ; */ || charCode === 0x2C /* , */) {
-      if (current !== 0) throw new Error("VLQ runover");
+      if (current !== 0 || currentBits !== 0) throw new Error("VLQ runover");
       if (currentSegment.length === 0) continue;
       // TODO: check monotonicity
       lastColumn += toSigned(currentSegment[0]);
@@ -219,7 +219,7 @@ const parseMappings = (mappings_: string, sources: string[], names: string[]): S
       current = 0;
       currentBits = 0;
     } else {
-      current |= (b << (currentBits & 31));
+      current |= ((b & 31) << currentBits);
       currentBits += 5;
     }
   }
