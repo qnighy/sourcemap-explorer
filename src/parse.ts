@@ -191,12 +191,16 @@ const parseMappings = (mappings_: string, sources: string[], names: string[]): S
         continue;
       }
       if (currentSegment.length === 0) throw new Error("Segment too short");
-      // TODO: check monotonicity
-      lastColumn += toSigned(currentSegment[0]);
+      const columnDiff = toSigned(currentSegment[0]);
+      if (columnDiff < 0) throw new Error("column must be monotonic");
+      lastColumn += columnDiff;
       if (currentSegment.length === 4 || currentSegment.length === 5) {
-        lastSourceIndex += toSigned(currentSegment[1]);
-        lastSourceLine += toSigned(currentSegment[2]);
-        lastSourceColumn += toSigned(currentSegment[3]);
+        const sourceIndexDiff = toSigned(currentSegment[1]);
+        const sourceLineDiff = toSigned(currentSegment[2]);
+        const sourceColumnDiff = toSigned(currentSegment[3]);
+        lastSourceIndex += sourceIndexDiff;
+        lastSourceLine += sourceLineDiff;
+        lastSourceColumn += sourceColumnDiff;
         if (currentSegment.length === 5) {
           lastNameIndex += toSigned(currentSegment[4]);
         }

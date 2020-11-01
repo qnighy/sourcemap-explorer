@@ -21,9 +21,11 @@ const App: React.FC = () => {
     setLeftFilelistOpen(false);
     setSelectedGenerated(name);
   }, [setLeftFilelistOpen, setSelectedGenerated]);
-  const selectRightFile = useCallback((name: string) => {
+  const [dummyMappings, setDummyMappings] = useState<Segment[][] | undefined>();
+  const selectRightFile = useCallback((name: string, dummyMappings?: Segment[][]) => {
     setRightFilelistOpen(false);
     setSelectedRight(name);
+    setDummyMappings(dummyMappings);
   }, [setRightFilelistOpen, setSelectedRight]);
   const selectedGeneratedFile = selectedGenerated !== undefined ? uploaderState.uploadedFiles.get(selectedGenerated) : undefined;
   const selectedGeneratedParsed = selectedGenerated !== undefined ? parseResult.files.get(selectedGenerated) : undefined;
@@ -54,7 +56,7 @@ const App: React.FC = () => {
                   <FontAwesomeIcon icon={faChevronDown} />
                 </button>
               </div>
-              <SourceMappedText text={new TextDecoder().decode(selectedGeneratedFile.content)} mappings={mappings} openRight={setSelectedRight} />
+              <SourceMappedText text={new TextDecoder().decode(selectedGeneratedFile.content)} mappings={mappings} openRight={selectRightFile} />
             </>
             : null
           }
@@ -75,7 +77,7 @@ const App: React.FC = () => {
                   <FontAwesomeIcon icon={faChevronDown} />
                 </button>
               </div>
-              <SourceMappedText text={new TextDecoder().decode(selectedRightFile.content)} />
+              <SourceMappedText text={new TextDecoder().decode(selectedRightFile.content)} mappings={dummyMappings} />
             </>
             : null
           }
@@ -140,7 +142,7 @@ const FileListAddButton: React.FC<FileListAddButtonProps> = (props) => {
 interface SourceMappedTextProps {
   text: string;
   mappings?: Segment[][];
-  openRight?: (name: string) => void;
+  openRight?: (name: string, dummyMappings?: Segment[][]) => void;
 }
 
 const SourceMappedText: React.FC<SourceMappedTextProps> = (props) => {
@@ -161,7 +163,7 @@ const SourceMappedText: React.FC<SourceMappedTextProps> = (props) => {
 interface SourceMappedLineProps {
   line: string;
   mappings?: Segment[];
-  openRight?: (name: string) => void;
+  openRight?: (name: string, dummyMappings?: Segment[][]) => void;
 }
 
 const SourceMappedLine: React.FC<SourceMappedLineProps> = (props) => {
@@ -187,12 +189,25 @@ const SourceMappedLine: React.FC<SourceMappedLineProps> = (props) => {
 interface SourceMappedSegmentProps {
   segmentText: string;
   mapping: Segment;
-  openRight?: (name: string) => void;
+  openRight?: (name: string, dummyMappings?: Segment[][]) => void;
 }
 
 const SourceMappedSegment: React.FC<SourceMappedSegmentProps> = (props) => {
   const { segmentText, mapping, openRight } = props;
-  const openThisRight = useCallback(() => openRight && mapping.source && openRight(mapping.source), [openRight, mapping.source]);
+  const openThisRight = useCallback(() => {
+    if (openRight && mapping.source) {
+      const dummyMappings: Segment[][] = new Array(mapping.sourceLine + 1).map(() => []);
+      dummyMappings[mapping.sourceLine] = [{
+        column: mapping.sourceColumn,
+        source: "_",
+        sourceLine: 0,
+        sourceColumn: 0,
+      }, {
+        column: mapping.sourceColumn + 1,
+      }];
+      openRight(mapping.source, dummyMappings);
+    }
+  }, [openRight, mapping.source, mapping.sourceLine, mapping.sourceColumn]);
   if (mapping.source) {
     return <span className="segment-mapped" onClick={openThisRight}>{segmentText}</span>;
   } else {
