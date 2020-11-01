@@ -80,24 +80,22 @@ const FileListEntry: React.FC<FileListEntryProps> = (props) => {
   const selectThisFile = useCallback(() => selectFile && selectFile(name), [name, selectFile]);
   const classNames = ["file-list-entry", selected ? "selected" : undefined].filter(Boolean);
   return (
-    <li className={classNames.join(" ")}>
-      <button onClick={selectThisFile} disabled={selected}>
-        <div className="file-list-entry-inner">
-          {name}{file.state === "uploading" ? "..." : ""}
-        </div>
-        {
-          file.state === "uploading" || file.state === "uploaded" ?
-          <>
-            <button className="file-list-select" onClick={selectThisFile}>
-              <FontAwesomeIcon icon={faCheck} />
-            </button>
-            <button className="file-list-remove" onClick={removeThisFile}>
-              <FontAwesomeIcon icon={faTrash} />
-            </button>
-          </> :
-          null
-        }
-      </button>
+    <li className={classNames.join(" ")} onClick={selectThisFile}>
+      <div className="file-list-entry-inner">
+        {name}{file.state === "uploading" ? "..." : ""}
+      </div>
+      {
+        file.state === "uploading" || file.state === "uploaded" ?
+        <>
+          <button className="file-list-select" onClick={selectThisFile}>
+            <FontAwesomeIcon icon={faCheck} />
+          </button>
+          <button className="file-list-remove" onClick={removeThisFile}>
+            <FontAwesomeIcon icon={faTrash} />
+          </button>
+        </> :
+        null
+      }
     </li>
   );
 };
