@@ -18,4 +18,7 @@ export interface BundledFileState {
 }
 
 export type UserFileState = UploadingFileState | UploadedFileState;
-export type SourceFileState = MissingFileState | BundledFileState | UploadedFileState;
+export type SourceFileState =
+  | MissingFileState
+  | BundledFileState
+  | UploadedFileState;

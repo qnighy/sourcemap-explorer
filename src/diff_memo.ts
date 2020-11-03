@@ -34,4 +34,4 @@ const equalDeps = (deps1: any[], deps2: any[]): boolean => {
     }
   }
   return true;
-}
+};

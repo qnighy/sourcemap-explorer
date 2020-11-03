@@ -1,4 +1,4 @@
-import { SourceFileState, UploadedFileState } from './file_states';
+import { SourceFileState, UploadedFileState } from "./file_states";
 
 export interface ParseResult {
   files: Map<string, ParsedFile>;
@@ -41,7 +41,10 @@ export interface MappedSegment {
 }
 export type Segment = UnmappedSegment | MappedSegment;
 
-export const parseFiles = (uploadedFiles: Map<string, UploadedFileState>, prev: ParseResult = initResult()): ParseResult => {
+export const parseFiles = (
+  uploadedFiles: Map<string, UploadedFileState>,
+  prev: ParseResult = initResult()
+): ParseResult => {
   const files = new Map<string, ParsedFile>();
   for (const [name, uploadedFile] of Array.from(uploadedFiles.entries())) {
     const prevFile = prev.files.get(name);
@@ -72,14 +75,20 @@ export const parseFiles = (uploadedFiles: Map<string, UploadedFileState>, prev: 
         // TODO: sourceRoot
         const sourceContent = file.sourceMap.sourcesContent[i];
         if (sourceContent) {
-          sourceFiles.set(source, { state: "bundled", content: new TextEncoder().encode(sourceContent) });
+          sourceFiles.set(source, {
+            state: "bundled",
+            content: new TextEncoder().encode(sourceContent),
+          });
         }
       }
     }
   }
   for (const [name, uploadedFile] of Array.from(uploadedFiles.entries())) {
     if (sourceFiles.has(name)) {
-      sourceFiles.set(name, { state: "uploaded", content: uploadedFile.content });
+      sourceFiles.set(name, {
+        state: "uploaded",
+        content: uploadedFile.content,
+      });
     }
   }
   return {
@@ -114,7 +123,15 @@ const parseSourceMap = (content: ArrayBuffer): SourceMapContent => {
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _typecheck_json: object = json;
-  const { version, file, sourceRoot, sources, sourcesContent, names, mappings } = json as { [key in string]?: unknown };
+  const {
+    version,
+    file,
+    sourceRoot,
+    sources,
+    sourcesContent,
+    names,
+    mappings,
+  } = json as { [key in string]?: unknown };
   if (version !== 3) {
     throw new Error("Invalid version");
   }
@@ -125,13 +142,16 @@ const parseSourceMap = (content: ArrayBuffer): SourceMapContent => {
     throw new Error("sourceRoot must be a string");
   }
   if (!isArrayOf(sources, isString)) {
-    throw new Error("sources must be an array of strings")
+    throw new Error("sources must be an array of strings");
   }
-  if (typeof sourcesContent !== "undefined" && !isArrayOf(sourcesContent, isStringOrNull)) {
-    throw new Error("sourcesContent must be an array of strings or nulls")
+  if (
+    typeof sourcesContent !== "undefined" &&
+    !isArrayOf(sourcesContent, isStringOrNull)
+  ) {
+    throw new Error("sourcesContent must be an array of strings or nulls");
   }
   if (!isArrayOf(names, isString)) {
-    throw new Error("names must be an array of strings")
+    throw new Error("names must be an array of strings");
   }
   if (typeof mappings !== "string") {
     throw new Error("mappings must be a string");
@@ -147,9 +167,13 @@ const parseSourceMap = (content: ArrayBuffer): SourceMapContent => {
 };
 
 const isString = (x: unknown): x is string => typeof x === "string";
-const isStringOrNull = (x: unknown): x is (string | null) => typeof x === "string" || x === null;
+const isStringOrNull = (x: unknown): x is string | null =>
+  typeof x === "string" || x === null;
 
-const isArrayOf = <T>(arr: unknown, pred: (x: unknown) => x is T): arr is T[] => {
+const isArrayOf = <T>(
+  arr: unknown,
+  pred: (x: unknown) => x is T
+): arr is T[] => {
   if (!Array.isArray(arr)) {
     return false;
   }
@@ -157,10 +181,15 @@ const isArrayOf = <T>(arr: unknown, pred: (x: unknown) => x is T): arr is T[] =>
     if (!pred(elem)) return false;
   }
   return true;
-}
+};
 
-const equalFiles = (files1: Map<string, ParsedFile>, files2: Map<string, ParsedFile>): boolean => {
-  for (const name of Array.from(files1.keys()).concat(Array.from(files2.keys()))) {
+const equalFiles = (
+  files1: Map<string, ParsedFile>,
+  files2: Map<string, ParsedFile>
+): boolean => {
+  for (const name of Array.from(files1.keys()).concat(
+    Array.from(files2.keys())
+  )) {
     if (files1.get(name) !== files2.get(name)) {
       return false;
     }
@@ -168,7 +197,11 @@ const equalFiles = (files1: Map<string, ParsedFile>, files2: Map<string, ParsedF
   return true;
 };
 
-const parseMappings = (mappings_: string, sources: string[], names: string[]): Segment[][] => {
+const parseMappings = (
+  mappings_: string,
+  sources: string[],
+  names: string[]
+): Segment[][] => {
   const mappings = mappings_ + ";";
   const lines: Segment[][] = [];
   let segments: Segment[] = [];
@@ -182,9 +215,9 @@ const parseMappings = (mappings_: string, sources: string[], names: string[]): S
   let currentBits = 0;
   for (let i = 0; i < mappings.length; i++) {
     const charCode = mappings.charCodeAt(i);
-    if (charCode === 0x3B /* ; */ || charCode === 0x2C /* , */) {
+    if (charCode === 0x3b /* ; */ || charCode === 0x2c /* , */) {
       if (current !== 0 || currentBits !== 0) throw new Error("VLQ runover");
-      if (currentSegment.length === 0 && charCode === 0x3B /* ; */) {
+      if (currentSegment.length === 0 && charCode === 0x3b /* ; */) {
         lines.push(segments);
         segments = [];
         lastColumn = 0;
@@ -216,7 +249,7 @@ const parseMappings = (mappings_: string, sources: string[], names: string[]): S
         name: currentSegment.length === 5 ? names[lastNameIndex] : undefined,
       });
       currentSegment = [];
-      if (charCode === 0x3B /* ; */) {
+      if (charCode === 0x3b /* ; */) {
         lines.push(segments);
         segments = [];
         lastColumn = 0;
@@ -229,23 +262,23 @@ const parseMappings = (mappings_: string, sources: string[], names: string[]): S
       current = 0;
       currentBits = 0;
     } else {
-      current |= ((b & 31) << currentBits);
+      current |= (b & 31) << currentBits;
       currentBits += 5;
     }
   }
   return lines;
-}
+};
 
 const base64val = (charCode: number): number => {
-  if (charCode >= 0x41 /* A */ && charCode <= 0x5A /* Z */) {
+  if (charCode >= 0x41 /* A */ && charCode <= 0x5a /* Z */) {
     return charCode - 0x41;
-  } else if (charCode >= 0x61 /* a */ && charCode <= 0x7A /* z */) {
+  } else if (charCode >= 0x61 /* a */ && charCode <= 0x7a /* z */) {
     return charCode - (0x61 - 26);
   } else if (charCode >= 0x30 /* 0 */ && charCode <= 0x39 /* 9 */) {
     return charCode + (52 - 0x30);
-  } else if (charCode === 0x2B /* + */) {
+  } else if (charCode === 0x2b /* + */) {
     return 62;
-  } else if (charCode === 0x2F /* / */) {
+  } else if (charCode === 0x2f /* / */) {
     return 63;
   } else {
     throw new Error(`Invalid base64 value: ${charCode}`);
@@ -256,6 +289,6 @@ const toSigned = (n: number): number => {
   if (n & 1) {
     return -(n >> 1);
   } else {
-    return (n >> 1);
+    return n >> 1;
   }
-}
+};
