@@ -205,12 +205,13 @@ const FileListEntry: React.FC<FileListEntryProps> = (props) => {
             onKeyPress={(e) => {
               if (e.key === "Enter") {
                 renameFile(name, nameEditing ?? name);
+                setNameEditing(undefined);
               }
             }}
             autoFocus={true}
           />
         ) : (
-          name
+          <span className="file-list-name">{name}</span>
         )}
         {file.state === "uploading" ? "..." : ""}
       </div>
@@ -232,6 +233,7 @@ const FileListEntry: React.FC<FileListEntryProps> = (props) => {
             onClick={(e) => {
               e.stopPropagation();
               renameFile(name, nameEditing ?? name);
+              setNameEditing(undefined);
             }}
           >
             <FontAwesomeIcon icon={faCheck} />

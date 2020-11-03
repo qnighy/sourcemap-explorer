@@ -29,7 +29,7 @@ export const useUploader = (): UploaderState => {
       setUserFiles((state) =>
         produce(state, (state) => {
           const entry = state.get(name);
-          if (entry) {
+          if (entry && name !== newName) {
             state.delete(name);
             state.set(newName, entry);
           }

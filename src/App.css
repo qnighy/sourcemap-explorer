@@ -51,6 +51,9 @@
   flex-grow: 1;
 }
 
+.file-list-name {
+  cursor: default;
+}
 .file-list-name-input {
   width: 100%;
   height: 100%;
