@@ -6,6 +6,7 @@ export interface UploaderState {
   userFiles: Map<string, UserFileState>;
   uploadedFiles: Map<string, UploadedFileState>;
   removeFile: (name: string) => void;
+  renameFile: (name: string, newName: string) => void;
   onDrop: (acceptedFiles: File[]) => void;
 }
 
@@ -18,6 +19,20 @@ export const useUploader = (): UploaderState => {
       setUserFiles((state) =>
         produce(state, (state) => {
           state.delete(name);
+        })
+      );
+    },
+    [setUserFiles]
+  );
+  const renameFile = useCallback(
+    (name: string, newName: string) => {
+      setUserFiles((state) =>
+        produce(state, (state) => {
+          const entry = state.get(name);
+          if (entry) {
+            state.delete(name);
+            state.set(newName, entry);
+          }
         })
       );
     },
@@ -75,6 +90,7 @@ export const useUploader = (): UploaderState => {
     uploadedFiles,
     userFiles,
     removeFile,
+    renameFile,
     onDrop,
   };
 };

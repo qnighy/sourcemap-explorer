@@ -5,6 +5,9 @@ import {
   faTrash,
   faChevronDown,
   faCheck,
+  faEdit,
+  faUndo,
+  faCaretDown,
 } from "@fortawesome/free-solid-svg-icons";
 import { SourceFileState, UserFileState } from "./file_states";
 import { useUploader } from "./uploader";
@@ -91,6 +94,7 @@ const App: React.FC = () => {
                   selected={name === selectedLeft}
                   selectFile={selectFile}
                   removeFile={uploaderState.removeFile}
+                  renameFile={uploaderState.renameFile}
                 />
               )
             )}
@@ -135,6 +139,7 @@ const App: React.FC = () => {
                   selected={false}
                   selectFile={selectRightFile}
                   removeFile={uploaderState.removeFile}
+                  renameFile={uploaderState.renameFile}
                 />
               )
             )}
@@ -168,44 +173,100 @@ interface FileListEntryProps {
   file: UserFileState | SourceFileState;
   selected: boolean;
   removeFile: (name: string) => void;
+  renameFile: (name: string, newName: string) => void;
   selectFile?: (name: string) => void;
 }
 
 const FileListEntry: React.FC<FileListEntryProps> = (props) => {
-  const { name, file, selected, removeFile, selectFile } = props;
-  const removeThisFile = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      removeFile(name);
-    },
-    [name, removeFile]
-  );
-  const selectThisFile = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (selectFile) selectFile(name);
-    },
-    [name, selectFile]
-  );
+  const { name, file, selected, removeFile, renameFile, selectFile } = props;
+  const [nameEditing, setNameEditing] = useState<string | undefined>();
+  const editable = file.state === "uploaded";
+  const editing = editable && !!nameEditing;
   const classNames = [
     "file-list-entry",
     selected ? "selected" : undefined,
   ].filter(Boolean);
   return (
-    <li className={classNames.join(" ")} onClick={selectThisFile}>
+    <li
+      className={classNames.join(" ")}
+      onClick={(e) => {
+        if (!editing && selectFile) {
+          selectFile(name);
+        }
+      }}
+    >
       <div className="file-list-entry-inner">
-        {name}
+        {editing ? (
+          <input
+            type="text"
+            className="file-list-name-input"
+            value={nameEditing}
+            onChange={(e) => setNameEditing(e.currentTarget.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                renameFile(name, nameEditing ?? name);
+              }
+            }}
+            autoFocus={true}
+          />
+        ) : (
+          name
+        )}
         {file.state === "uploading" ? "..." : ""}
       </div>
-      {file.state === "uploading" || file.state === "uploaded" ? (
+      {(file.state === "uploaded" || file.state === "bundled") && !editing ? (
+        <button
+          className="file-list-select"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (selectFile) selectFile(name);
+          }}
+        >
+          <FontAwesomeIcon icon={faCaretDown} />
+        </button>
+      ) : null}
+      {editing ? (
         <>
-          <button className="file-list-select" onClick={selectThisFile}>
+          <button
+            className="file-list-apply-edit"
+            onClick={(e) => {
+              e.stopPropagation();
+              renameFile(name, nameEditing ?? name);
+            }}
+          >
             <FontAwesomeIcon icon={faCheck} />
           </button>
-          <button className="file-list-remove" onClick={removeThisFile}>
-            <FontAwesomeIcon icon={faTrash} />
+          <button
+            className="file-list-cancel-edit"
+            onClick={(e) => {
+              e.stopPropagation();
+              setNameEditing(undefined);
+            }}
+          >
+            <FontAwesomeIcon icon={faUndo} />
           </button>
         </>
+      ) : editable ? (
+        <button
+          className="file-list-edit"
+          onClick={(e) => {
+            e.stopPropagation();
+            setNameEditing(name);
+          }}
+        >
+          <FontAwesomeIcon icon={faEdit} />
+        </button>
+      ) : null}
+      {file.state === "uploading" || file.state === "uploaded" ? (
+        <button
+          className="file-list-remove"
+          onClick={(e) => {
+            e.stopPropagation();
+            removeFile(name);
+          }}
+        >
+          <FontAwesomeIcon icon={faTrash} />
+        </button>
       ) : null}
     </li>
   );
