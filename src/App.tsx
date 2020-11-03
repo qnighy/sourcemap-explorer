@@ -22,18 +22,14 @@ const App: React.FC = () => {
   const [leftFilelistOpen, setLeftFilelistOpen] = useState(false);
   const [rightFilelistOpen, setRightFilelistOpen] = useState(false);
 
-  const [selectedGenerated, setSelectedGenerated] = useState<
-    string | undefined
-  >(undefined);
-  const [selectedRight, setSelectedRight] = useState<string | undefined>(
-    undefined
-  );
+  const [selectedLeft, setSelectedLeft] = useState<string | undefined>();
+  const [selectedRight, setSelectedRight] = useState<string | undefined>();
   const selectFile = useCallback(
     (name: string) => {
       setLeftFilelistOpen(false);
-      setSelectedGenerated(name);
+      setSelectedLeft(name);
     },
-    [setLeftFilelistOpen, setSelectedGenerated]
+    [setLeftFilelistOpen, setSelectedLeft]
   );
   const [selectSegmentLeft, setSelectSegmentLeft] = useState<
     [number, number] | undefined
@@ -51,12 +47,12 @@ const App: React.FC = () => {
     [setRightFilelistOpen, setSelectedRight]
   );
   const selectedGeneratedFile =
-    selectedGenerated !== undefined
-      ? uploaderState.uploadedFiles.get(selectedGenerated)
+    selectedLeft !== undefined
+      ? uploaderState.uploadedFiles.get(selectedLeft)
       : undefined;
   const selectedGeneratedParsed =
-    selectedGenerated !== undefined
-      ? parseResult.files.get(selectedGenerated)
+    selectedLeft !== undefined
+      ? parseResult.files.get(selectedLeft)
       : undefined;
   const selectedRightFile =
     selectedRight !== undefined
@@ -68,12 +64,12 @@ const App: React.FC = () => {
         ?.mappings
     : undefined;
   const inversedMappings = useMemo<Segment[][] | undefined>(() => {
-    if (selectedGenerated && selectedRight && mappings) {
-      return inverseMappings(selectedGenerated, selectedRight, mappings);
+    if (selectedLeft && selectedRight && mappings) {
+      return inverseMappings(selectedLeft, selectedRight, mappings);
     } else {
       return undefined;
     }
-  }, [selectedGenerated, selectedRight, mappings]);
+  }, [selectedLeft, selectedRight, mappings]);
   return (
     <div className="App">
       <h1>SourceMap Explorer</h1>
@@ -92,7 +88,7 @@ const App: React.FC = () => {
                   key={name}
                   name={name}
                   file={file}
-                  selected={name === selectedGenerated}
+                  selected={name === selectedLeft}
                   selectFile={selectFile}
                   removeFile={uploaderState.removeFile}
                 />
@@ -106,7 +102,7 @@ const App: React.FC = () => {
                 className="file-heading"
                 onClick={() => setLeftFilelistOpen(true)}
               >
-                <div className="file-heading-inner">{selectedGenerated}</div>
+                <div className="file-heading-inner">{selectedLeft}</div>
                 <button onClick={() => setLeftFilelistOpen(true)}>
                   <FontAwesomeIcon icon={faChevronDown} />
                 </button>
