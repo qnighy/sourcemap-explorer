@@ -1,11 +1,11 @@
 import { useDebugValue, useRef } from "react";
 
 interface DiffMemoState<T> {
-  deps: any[];
+  deps: unknown[];
   value: T;
 }
 
-export const useDiffMemo = <T>(f: (prev?: T) => T, deps: any[]): T => {
+export const useDiffMemo = <T>(f: (prev?: T) => T, deps: unknown[]): T => {
   const state = useRef<DiffMemoState<T> | null>(null);
   if (state.current === null) {
     const value = f();
@@ -26,7 +26,7 @@ export const useDiffMemo = <T>(f: (prev?: T) => T, deps: any[]): T => {
   }
 };
 
-const equalDeps = (deps1: any[], deps2: any[]): boolean => {
+const equalDeps = (deps1: unknown[], deps2: unknown[]): boolean => {
   if (deps1.length !== deps2.length) return false;
   for (let i = 0; i < deps1.length; i++) {
     if (deps1[i] !== deps2[i]) {

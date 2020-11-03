@@ -121,7 +121,7 @@ const parseSourceMap = (content: ArrayBuffer): SourceMapContent => {
   if (typeof json !== "object" || json === null || Array.isArray(json)) {
     throw new Error("SourecMap should be an object");
   }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types
   const _typecheck_json: object = json;
   const {
     version,
