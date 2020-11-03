@@ -173,14 +173,20 @@ interface FileListEntryProps {
 
 const FileListEntry: React.FC<FileListEntryProps> = (props) => {
   const { name, file, selected, removeFile, selectFile } = props;
-  const removeThisFile = useCallback(() => removeFile(name), [
-    name,
-    removeFile,
-  ]);
-  const selectThisFile = useCallback(() => selectFile && selectFile(name), [
-    name,
-    selectFile,
-  ]);
+  const removeThisFile = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      removeFile(name);
+    },
+    [name, removeFile]
+  );
+  const selectThisFile = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (selectFile) selectFile(name);
+    },
+    [name, selectFile]
+  );
   const classNames = [
     "file-list-entry",
     selected ? "selected" : undefined,
