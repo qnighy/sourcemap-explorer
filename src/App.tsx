@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useDropzone } from "react-dropzone";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -396,11 +402,21 @@ const SourceMappedSegment: React.FC<SourceMappedSegmentProps> = (props) => {
     mapping.sourceLine,
     mapping.sourceColumn,
   ]);
+  const highlightRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (highlight) {
+      highlightRef.current?.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+      });
+    }
+  }, [highlight]);
   if (mapping.source) {
     return (
       <span
         className={highlight ? "segment-mapped highlight" : "segment-mapped"}
         onClick={openThisRight}
+        ref={highlight ? highlightRef : undefined}
       >
         {segmentText}
       </span>
