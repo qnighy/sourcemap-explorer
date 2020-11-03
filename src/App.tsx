@@ -46,11 +46,11 @@ const App: React.FC = () => {
     },
     [setRightFilelistOpen, setSelectedRight]
   );
-  const selectedGeneratedFile =
+  const selectedLeftFile =
     selectedLeft !== undefined
       ? uploaderState.uploadedFiles.get(selectedLeft)
       : undefined;
-  const selectedGeneratedParsed =
+  const selectedLeftParsed =
     selectedLeft !== undefined
       ? parseResult.files.get(selectedLeft)
       : undefined;
@@ -59,8 +59,8 @@ const App: React.FC = () => {
       ? parseResult.sourceFiles.get(selectedRight)
       : undefined;
   // TODO: relative path
-  const mappings = selectedGeneratedParsed?.sourceMapRef
-    ? parseResult.files.get(selectedGeneratedParsed.sourceMapRef)?.sourceMap
+  const mappings = selectedLeftParsed?.sourceMapRef
+    ? parseResult.files.get(selectedLeftParsed.sourceMapRef)?.sourceMap
         ?.mappings
     : undefined;
   const inversedMappings = useMemo<Segment[][] | undefined>(() => {
@@ -77,7 +77,7 @@ const App: React.FC = () => {
         <div className="editor-generated">
           <ul
             className={
-              selectedGeneratedFile && !leftFilelistOpen
+              selectedLeftFile && !leftFilelistOpen
                 ? "file-list closed"
                 : "file-list"
             }
@@ -96,7 +96,7 @@ const App: React.FC = () => {
             )}
             <FileListAddButton onDrop={uploaderState.onDrop} />
           </ul>
-          {selectedGeneratedFile ? (
+          {selectedLeftFile ? (
             <>
               <div
                 className="file-heading"
@@ -108,7 +108,7 @@ const App: React.FC = () => {
                 </button>
               </div>
               <SourceMappedText
-                text={new TextDecoder().decode(selectedGeneratedFile.content)}
+                text={new TextDecoder().decode(selectedLeftFile.content)}
                 mappings={mappings}
                 openRight={selectRightFile}
                 highlight={selectSegmentLeft}
